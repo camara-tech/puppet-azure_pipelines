@@ -356,13 +356,17 @@ define azure_pipelines::agent (
         }
         if $facts['kernel'] == 'Linux' and $run_as_service {
             exec {"${install_path}/svc.sh install ${service_user}":
-                creates => "/etc/systemd/system/vsts.agent.${instance_name}.${agent_name}.service",
+                onlyif  => "systemctl list-unit-files \"$(systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\" | grep \"$(systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\"",
                 user    => 'root',
                 cwd     => $install_path,
                 require => Exec["${install_path}/${config_script}"],
             }
             if $manage_service {
-                service {"vsts.agent.${instance_name}.${agent_name}.service":
+                $escaped_dashes_in_service_name = regsubst("vsts.agent.${instance_name}.${agent_name}.service", '-', '\x2d', 'G')
+                $escaped_spaces_in_service_name = regsubst($escaped_dashes_in_service_name, ' ', '\x20', 'G')
+                $escaped_slashes_in_service_name = regsubst($escaped_spaces_in_service_name, '/', '-', 'G')
+                $escaped_service_name = $escaped_slashes_in_service_name
+                service { $escaped_service_name:
                     ensure  => 'running',
                     require => Exec["${install_path}/svc.sh install ${service_user}"],
                 }
