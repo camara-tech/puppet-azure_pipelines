@@ -356,7 +356,7 @@ define azure_pipelines::agent (
         }
         if $facts['kernel'] == 'Linux' and $run_as_service {
             exec {"${install_path}/svc.sh install ${service_user}":
-                onlyif  => "systemctl list-unit-files \"$(systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\" | grep \"$(systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\"",
+                onlyif  => "/bin/systemctl list-unit-files \"$(/bin/systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\" | /bin/grep \"$(/bin/systemd-escape --path vsts.agent.${instance_name}.${agent_name}.service)\"",
                 user    => 'root',
                 cwd     => $install_path,
                 require => Exec["${install_path}/${config_script}"],
